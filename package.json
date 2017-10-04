@@ -19,6 +19,8 @@
   "dependencies": {
     "dotenv": "^4.0.0",
     "net": "^1.0.2",
-    "tls": "0.0.1"
+    "node-json-db": "^0.7.3",
+    "tls": "0.0.1",
+    "unix-timestamp": "^0.2.0"
   }
 }

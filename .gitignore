@@ -3,3 +3,6 @@
  typings/
 .vs/
 465_dorrell_jason_server.sln
+message.json
+bin/
+obj/
