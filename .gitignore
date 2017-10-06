@@ -1,6 +1,8 @@
 ﻿.env
 465_dorrell_jason_server.njsproj
  typings/
+ typings/index.d.ts
+ typings/globals/async/
 .vs/
 465_dorrell_jason_server.sln
 message.json
