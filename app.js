@@ -5,6 +5,8 @@ const tls = require('tls'),
     //db = require('./store_message.js'),
     //msg = require('./message.json');
 
+var handshakeComplete = false;
+
 var options = {
     key: fs.readFileSync(process.env.KEY),
     cert: fs.readFileSync(process.env.CERT),
@@ -22,33 +24,75 @@ var options = {
 
 var server = tls.createServer(options, function (socket) {
 
-    	//Show the certificate info as supplied by the client
-    	//console.log(socket.getPeerCertificate());
-
     socket.setEncoding('utf8');
 	
-    //console.log('server connected', socket.authorized ? 'authorized' : 'unauthorized');
     if (socket.authorized) {
         socket.write(process.env.SERVER_WELCOME);
+        //console.log('new')//for testing
     };
 
     socket.on('data', function (req) {
-
+        //console.log(req);//for testing
         if (socket.authorized) {
 
-            console.log(req);
-            var res = handshake(req);
-            while (!res) { };//////////////////////////////////////////////////////////fix
-            socket.write(res);///////////////////////////////////////////sync problem here
+            if (req !== "ERROR") {
 
+                console.log(req);
+
+                if (req === process.env.CLIENT_HELO) {
+
+                    socket.write(process.env.SERVER_HELLO);
+
+                };
+
+                if (req.startsWith(process.env.MAIL_FROM)) {
+
+                    socket.write(process.env.SERVER_OK);
+
+                };
+
+                if (req === process.env.RCPT_TO) {
+
+                    socket.write(process.env.SERVER_OK);
+
+                };
+
+                if (req === process.env.DATA) {
+
+                    socket.write(process.env.SERVER_SEND);
+
+                };
+
+                if (req === "Way to go dumbass!") {
+
+                    console.log('message recieved');
+
+                };
+
+                if (req === '\r\n' + process.env.CLIENT_END + '\r\n') {
+
+                    socket.write(process.env.SERVER_OK + ", " + process.env.SERVER_ACCEPTS);
+
+                };
+
+                if (req === process.env.QUIT) {
+
+                    socket.write(process.env.SERVER_GOODBYE);
+
+                };//good to this line
+            };
         };
 
         //db.store(JSON.parse(req));
 	});
 
+    /////////////////////////////////////////////////
+    //socket closed from client side throws exception
 	socket.on('end', function() {
-  		socket.destroy();
-	});
+        socket.destroy();
+        console.log("socket destroyed");
+    });
+    /////////////////////////////////////////////////
 	
 });
 
@@ -56,16 +100,5 @@ server.listen(9999, function (socket) {
     console.log('server bound');
 
 });
-
-function handshake(req) {
-    if (req !== "ERROR") {
-
-        if (req === process.env.CLIENT_HELO) {
-            var res = (process.env.SERVER_HELLO);
-            return res;
-        };
-    };
-    
-};
 
 //db.store(msg);
