@@ -51,7 +51,7 @@ var server = tls.createServer(options, function (socket) {
 
                 };
 
-                if (req === process.env.RCPT_TO) {
+                if (req.startsWith(process.env.RCPT_TO)) {
 
                     socket.write(process.env.SERVER_OK);
 
@@ -63,7 +63,7 @@ var server = tls.createServer(options, function (socket) {
 
                 };
 
-                if (req === "Way to go dumbass!") {
+                if (req === "Way to go dumbass!") {//need to verify msg body
 
                     console.log('message recieved');
 
