@@ -1,11 +1,23 @@
 ﻿require('dotenv').config();
 
 const tls = require('tls'),
-    fs = require('fs');
-    //db = require('./store_message.js'),
-    //msg = require('./message.json');
+    fs = require('fs'),
+    colors = require('colors'),
+    db = require('./store_message.js');
 
-var handshakeComplete = false;
+//var msg;      //keep for now
+var msg_status = {
+
+    welcome: false,
+    hello: false,
+    from_OK: false,
+    to_OK: false,
+    begin_msg: false,
+    server_send: false,
+    body_ok: false,
+
+
+};
 
 var options = {
     key: fs.readFileSync(process.env.KEY),
@@ -28,44 +40,63 @@ var server = tls.createServer(options, function (socket) {
 	
     if (socket.authorized) {
         socket.write(process.env.SERVER_WELCOME);
+        msg_status.welcome = true;
         //console.log('new')//for testing
     };
 
     socket.on('data', function (req) {
         //console.log(req);//for testing
+        
+
         if (socket.authorized) {
 
             if (req !== "ERROR") {
 
-                console.log(req);
+                console.log(req.green);
 
-                if (req === process.env.CLIENT_HELO) {
+                if (req === process.env.CLIENT_HELO && msg_status.welcome) {
 
                     socket.write(process.env.SERVER_HELLO);
+                    msg_status.hello = true;
 
                 };
 
-                if (req.startsWith(process.env.MAIL_FROM)) {
+                if (req.startsWith(process.env.MAIL_FROM) && msg_status.welcome && msg_status.hello) {
 
                     socket.write(process.env.SERVER_OK);
+                    //msg = req;    //keep for now
+                    msg_status.from_OK = true;
 
                 };
 
-                if (req.startsWith(process.env.RCPT_TO)) {
+                if (req.startsWith(process.env.RCPT_TO) && msg_status.welcome && msg_status.hello && msg_status.from_OK) {
 
                     socket.write(process.env.SERVER_OK);
+                    //msg = msg + req;    //keep for now
+                    msg_status.to_OK = true;
 
                 };
-
-                if (req === process.env.DATA) {
+     
+                if (req === process.env.DATA && msg_status.welcome && msg_status.hello && msg_status.from_OK && msg_status.to_OK) {
 
                     socket.write(process.env.SERVER_SEND);
+                    msg_status.server_send = true;
+                    
+                };
+
+                if (req !== process.env.DATA && msg_status.welcome && msg_status.hello && msg_status.from_OK && msg_status.to_OK && msg_status.server_send) {
+
+                    msg_status.begin_msg = true;
 
                 };
 
-                if (req === "Way to go dumbass!") {//need to verify msg body
+                if (req.startsWith('{') && msg_status.welcome && msg_status.hello && msg_status.from_OK && msg_status.to_OK && msg_status.server_send && msg_status.begin_msg) {
 
-                    console.log('message recieved');
+                    //msg = msg + req;    //keep for now
+                    //console.log(req); //for testing
+                    var msg = JSON.parse(req);
+                    db.store(msg);
+                    msg_status.body_ok = true;
 
                 };
 
@@ -79,8 +110,9 @@ var server = tls.createServer(options, function (socket) {
 
                     socket.write(process.env.SERVER_GOODBYE);
 
-                };//good to this line
+                };
             };
+
         };
 
         //db.store(JSON.parse(req));
@@ -90,14 +122,14 @@ var server = tls.createServer(options, function (socket) {
     //socket closed from client side throws exception
 	socket.on('end', function() {
         socket.destroy();
-        console.log("socket destroyed");
+        console.log("socket destroyed".blue);
     });
     /////////////////////////////////////////////////
 	
 });
 
 server.listen(9999, function (socket) {
-    console.log('server bound');
+    console.log('server bound'.blue);
 
 });
 
