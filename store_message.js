@@ -9,7 +9,7 @@ module.exports.store = function (msg) {
         msgID = "/" + timestamp.now();
         
     //db.push(msgID, { test: "test", json: { test: ["test"] } });//keep for sample
-    db.push(msgID, { From: msg.email_user, To: [msg.email_recipient, "test2"], Subject: msg.email_subject, Body: msg.email_body});
+    db.push(msgID, { From: msg.From, To: [msg.To], Subject: msg.Subject, Body: msg.Body});
 
     console.log("record added".blue);
 };

@@ -41,7 +41,6 @@ var server = tls.createServer(options, function (socket) {
     if (socket.authorized) {
         socket.write(process.env.SERVER_WELCOME);
         msg_status.welcome = true;
-        //console.log('new')//for testing
     };
 
     socket.on('data', function (req) {
